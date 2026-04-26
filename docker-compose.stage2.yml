@@ -1,0 +1,5 @@
+# Stage 2 overlay — Kafka + analytics worker
+# Usage: docker compose -f docker-compose.stage1.yml -f docker-compose.stage2.yml up --build
+# Populated in Milestone 6.
+
+services: {}

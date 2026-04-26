@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FreightFlow.CarrierApi/FreightFlow.CarrierApi.csproj" />
+    <Project Path="src/FreightFlow.Gateway/FreightFlow.Gateway.csproj" />
+    <Project Path="src/FreightFlow.RfpApi/FreightFlow.RfpApi.csproj" />
+    <Project Path="src/FreightFlow.SharedKernel/FreightFlow.SharedKernel.csproj" />
+    <Project Path="src/FreightFlow.WorkflowWorker/FreightFlow.WorkflowWorker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FreightFlow.Domain.Tests/FreightFlow.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

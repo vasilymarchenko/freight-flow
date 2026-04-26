@@ -1,0 +1,145 @@
+services:
+
+  # ── Infrastructure ────────────────────────────────────────────────────────────
+
+  postgres-rfp:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_RFP_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-rfp-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rfp_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-carrier:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_CARRIER_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-carrier-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d carrier_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ── Application services ──────────────────────────────────────────────────────
+
+  freight-rfp-api:
+    build:
+      context: .
+      dockerfile: src/FreightFlow.RfpApi/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__RfpDb=Host=postgres-rfp;Database=rfp_db;Username=postgres;Password=postgres
+    depends_on:
+      postgres-rfp:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  freight-carrier-api:
+    build:
+      context: .
+      dockerfile: src/FreightFlow.CarrierApi/Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__CarrierDb=${CONN_CARRIER_DB}
+    depends_on:
+      postgres-carrier:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  freight-workflow-worker:
+    build:
+      context: .
+      dockerfile: src/FreightFlow.WorkflowWorker/Dockerfile
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__RfpDb=${CONN_RFP_DB}
+    depends_on:
+      postgres-rfp:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  freight-gateway:
+    build:
+      context: .
+      dockerfile: src/FreightFlow.Gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      freight-rfp-api:
+        condition: service_healthy
+      freight-carrier-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres-rfp-data:
+  postgres-carrier-data:

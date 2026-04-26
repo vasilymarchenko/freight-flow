@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option csharp_namespace = "FreightFlow.CarrierApi.Grpc";
+
+package capacity;
+
+// gRPC contract for synchronous capacity reservation.
+// Used by WorkflowWorker (client) → CarrierApi (server) during the award Saga.
+// Both sides reference this file directly from proto/.
+
+service CapacityService {
+  rpc ReserveCapacity (ReserveCapacityRequest)  returns (ReserveCapacityResponse);
+  rpc ReleaseCapacity (ReleaseCapacityRequest)  returns (ReleaseCapacityResponse);
+}
+
+message ReserveCapacityRequest {
+  string carrier_id     = 1;
+  string lane_id        = 2;
+  int32  volume         = 3;
+  string reservation_id = 4; // idempotency key — safe to replay
+}
+
+message ReserveCapacityResponse {
+  bool   success = 1;
+  string reason  = 2; // populated only on failure
+}
+
+message ReleaseCapacityRequest {
+  string reservation_id = 1;
+  string carrier_id     = 2;
+  string lane_id        = 3;
+  int32  volume         = 4;
+}
+
+message ReleaseCapacityResponse {
+  bool   success = 1;
+  string reason  = 2;
+}

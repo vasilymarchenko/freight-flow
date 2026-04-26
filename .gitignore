@@ -8,6 +8,9 @@ out/
 publish/
 artifacts/
 
+# Local environment — never commit credentials
+# .env
+
 # User-specific files
 *.user
 *.rsuser
@@ -23,6 +26,8 @@ artifacts/
 !.vscode/tasks.json
 !.vscode/launch.json
 .idea/
+
+*.lscache
 
 # NuGet
 *.nupkg

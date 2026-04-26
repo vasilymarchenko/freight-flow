@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY ["src/FreightFlow.WorkflowWorker/FreightFlow.WorkflowWorker.csproj", "src/FreightFlow.WorkflowWorker/"]
+COPY ["src/FreightFlow.SharedKernel/FreightFlow.SharedKernel.csproj",      "src/FreightFlow.SharedKernel/"]
+RUN dotnet restore "src/FreightFlow.WorkflowWorker/FreightFlow.WorkflowWorker.csproj"
+
+COPY . .
+RUN dotnet publish "src/FreightFlow.WorkflowWorker/FreightFlow.WorkflowWorker.csproj" \
+    -c Release -o /app/publish --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build --chown=app:app /app/publish .
+USER app
+ENTRYPOINT ["dotnet", "FreightFlow.WorkflowWorker.dll"]

@@ -1,0 +1,16 @@
+**/.git
+**/.gitignore
+**/.dockerignore
+**/bin
+**/obj
+**/*.user
+**/*.suo
+**/.vs
+README.md
+BUILDPLAN.md
+AGENTS.md
+FreightFlow-Proposal.md
+docker-compose*.yml
+docs/
+.vscode/
+.github/
