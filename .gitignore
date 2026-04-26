@@ -9,7 +9,7 @@ publish/
 artifacts/
 
 # Local environment — never commit credentials
-# .env
+.env
 
 # User-specific files
 *.user
