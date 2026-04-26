@@ -83,14 +83,21 @@ services:
       context: .
       dockerfile: src/FreightFlow.CarrierApi/Dockerfile
     ports:
-      - "5001:8080"
+      - "5001:8080"   # REST
+      - "5011:5011"   # gRPC (HTTP/2 only)
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__CarrierDb=${CONN_CARRIER_DB}
+      - ConnectionStrings__CarrierDb=Host=postgres-carrier;Database=carrier_db;Username=postgres;Password=postgres
+      - ConnectionStrings__Redis=redis:6379
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
     depends_on:
       postgres-carrier:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

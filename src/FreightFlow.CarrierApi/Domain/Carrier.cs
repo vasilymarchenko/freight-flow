@@ -16,6 +16,7 @@ public sealed class Carrier : AggregateRoot
     public DateOnly                       InsuranceExpiry  { get; private set; }
     public CarrierProfile                 Profile          { get; private set; } = null!;
     public IReadOnlyList<CapacityRecord>  CapacityRecords  => _capacityRecords.AsReadOnly();
+    public DateTimeOffset                 CreatedAt        { get; private set; }
 
     private Carrier() { }  // EF Core
 
@@ -32,7 +33,8 @@ public sealed class Carrier : AggregateRoot
             Name            = name,
             AuthorityStatus = AuthorityStatus.Active,
             InsuranceExpiry = insuranceExpiry,
-            Profile         = profile
+            Profile         = profile,
+            CreatedAt       = DateTimeOffset.UtcNow
         };
         carrier.Raise(new CarrierOnboarded(carrier.Id, dotNumber, DateTimeOffset.UtcNow));
         return carrier;
