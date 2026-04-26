@@ -1,0 +1,70 @@
+# FreightFlow .gitignore
+# Stack: .NET 10 / C# 13, Docker Compose, VS Code
+
+# Build output
+[Bb]in/
+[Oo]bj/
+out/
+publish/
+artifacts/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDE/editor
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Test and coverage output
+[Tt]est[Rr]esult*/
+[Bb]enchmark[Dd]ot[Nn]et.Artifacts/
+coverage/
+coverage-*/
+*.coverage
+*.coveragexml
+coverage.cobertura.xml
+
+# Logs
+*.log
+logs/
+
+# ASP.NET local/dev secrets and environment overrides
+secrets.json
+appsettings.Development.local.json
+appsettings.Local.json
+.env
+.env.*
+!.env.example
+
+# Docker
+.docker/
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+*.swp
+*.swo
+*~
