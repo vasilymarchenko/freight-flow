@@ -4,15 +4,21 @@ namespace FreightFlow.RfpApi.Domain;
 
 public sealed class LanePrice
 {
+    private decimal _amount;
+    private string  _currency = string.Empty;
+
     public LaneId LaneId { get; private set; }
-    public Money  Price  { get; private set; }
+
+    // Computed from the two persistence columns — never stored as a column itself.
+    public Money Price => new Money(_amount, _currency);
 
     private LanePrice() { }  // EF Core
 
     public LanePrice(LaneId laneId, Money price)
     {
-        LaneId = laneId;
-        Price  = price;
+        LaneId    = laneId;
+        _amount   = price.Amount;
+        _currency = price.Currency;
     }
 }
 

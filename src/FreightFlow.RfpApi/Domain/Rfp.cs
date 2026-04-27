@@ -16,6 +16,8 @@ public sealed class Rfp : AggregateRoot
     public DateTimeOffset   OpenAt        { get; private set; }
     public DateTimeOffset   CloseAt       { get; private set; }
     public int              MaxBidRounds  { get; private set; }
+    public DateTimeOffset   CreatedAt     { get; private set; }
+    public DateTimeOffset   UpdatedAt     { get; private set; }
     public IReadOnlyList<Lane> Lanes      => _lanes.AsReadOnly();
     public IReadOnlyList<Bid>  Bids       => _bids.AsReadOnly();
     public Award?           Award         { get; private set; }
@@ -28,6 +30,7 @@ public sealed class Rfp : AggregateRoot
         DateTimeOffset closeAt,
         int maxBidRounds)
     {
+        var now = DateTimeOffset.UtcNow;
         var rfp = new Rfp
         {
             Id           = RfpId.New(),
@@ -35,7 +38,9 @@ public sealed class Rfp : AggregateRoot
             Status       = RfpStatus.Draft,
             OpenAt       = openAt,
             CloseAt      = closeAt,
-            MaxBidRounds = maxBidRounds
+            MaxBidRounds = maxBidRounds,
+            CreatedAt    = now,
+            UpdatedAt    = now
         };
         rfp.Raise(new RfpCreated(rfp.Id, shipperId, DateTimeOffset.UtcNow));
         return rfp;
@@ -47,6 +52,7 @@ public sealed class Rfp : AggregateRoot
             throw new DomainException("Cannot add a lane to an RFP that is not in Draft status.");
 
         _lanes.Add(new Lane(LaneId.New(), originZip, destinationZip, freightClass, volume));
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     public void Open()
@@ -54,7 +60,8 @@ public sealed class Rfp : AggregateRoot
         if (Status != RfpStatus.Draft)
             throw new DomainException("Only a Draft RFP can be opened.");
 
-        Status = RfpStatus.Open;
+        Status    = RfpStatus.Open;
+        UpdatedAt = DateTimeOffset.UtcNow;
         Raise(new RfpOpened(Id, DateTimeOffset.UtcNow));
     }
 
@@ -63,7 +70,8 @@ public sealed class Rfp : AggregateRoot
         if (Status != RfpStatus.Open)
             throw new DomainException("Only an Open RFP can be closed.");
 
-        Status = RfpStatus.Closed;
+        Status    = RfpStatus.Closed;
+        UpdatedAt = DateTimeOffset.UtcNow;
         Raise(new RfpClosed(Id, DateTimeOffset.UtcNow));
     }
 
@@ -80,6 +88,7 @@ public sealed class Rfp : AggregateRoot
 
         var bid = new Bid(BidId.New(), carrierId, nextRound, lanePrices);
         _bids.Add(bid);
+        UpdatedAt = DateTimeOffset.UtcNow;
         Raise(new BidSubmitted(Id, bid.Id, carrierId, DateTimeOffset.UtcNow));
         return bid;
     }
@@ -95,8 +104,9 @@ public sealed class Rfp : AggregateRoot
         var bid = _bids.FirstOrDefault(b => b.Id == bidId)
             ?? throw new DomainException($"Bid '{bidId}' not found on this RFP.");
 
-        Award  = new Award(bidId, bid.CarrierId);
-        Status = RfpStatus.Awarded;
+        Award     = new Award(bidId, bid.CarrierId);
+        Status    = RfpStatus.Awarded;
+        UpdatedAt = DateTimeOffset.UtcNow;
         Raise(new AwardIssued(Id, bidId, bid.CarrierId, DateTimeOffset.UtcNow));
         return Award;
     }
