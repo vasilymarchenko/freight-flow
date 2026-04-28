@@ -41,6 +41,7 @@
 
     <!-- Health checks -->
     <PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="8.*" />
+    <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" Version="8.*" />
 
     <!-- Observability -->
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.*" />

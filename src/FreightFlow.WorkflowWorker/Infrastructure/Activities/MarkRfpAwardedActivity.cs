@@ -45,9 +45,14 @@ public sealed class MarkRfpAwardedActivity : IMarkRfpAwardedActivity
     {
         var saga = context.Saga;
 
+        if (!saga.ContractId.HasValue)
+            throw new InvalidOperationException(
+                $"Saga {saga.CorrelationId}: ContractId is null at step 4 (MarkRfpAwarded). " +
+                "This indicates data corruption — compensation should have prevented reaching this step.");
+
         await context.Publish(new RfpMarkAsAwarded(
             RfpId:      saga.RfpId,
-            ContractId: saga.ContractId ?? Guid.Empty,
+            ContractId: saga.ContractId.Value,
             OccurredAt: DateTimeOffset.UtcNow));
 
         saga.UpdatedAt = DateTimeOffset.UtcNow;

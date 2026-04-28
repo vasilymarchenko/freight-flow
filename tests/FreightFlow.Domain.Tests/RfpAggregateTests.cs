@@ -84,10 +84,23 @@ public sealed class RfpAggregateTests
     // ── IssueAward ────────────────────────────────────────────────────────────
 
     [Fact]
+    public void IssueAward_WhenRfpNotClosed_ThrowsDomainException()
+    {
+        var rfp = CreateOpenRfp();
+        var bid = rfp.SubmitBid(CarrierId.New(), SomeLanePrices());
+
+        // RFP is Open — must be Closed before awarding.
+        var act = () => rfp.IssueAward(bid.Id);
+
+        act.ShouldThrow<DomainException>().Message.ShouldContain("Closed");
+    }
+
+    [Fact]
     public void IssueAward_WhenBidExists_Succeeds()
     {
         var rfp = CreateOpenRfp();
         var bid = rfp.SubmitBid(CarrierId.New(), SomeLanePrices());
+        rfp.Close();
 
         rfp.IssueAward(bid.Id);
 
@@ -99,6 +112,7 @@ public sealed class RfpAggregateTests
     public void IssueAward_WhenNoBids_ThrowsDomainException()
     {
         var rfp = CreateOpenRfp();
+        rfp.Close();
 
         var act = () => rfp.IssueAward(BidId.New());
 
@@ -110,11 +124,13 @@ public sealed class RfpAggregateTests
     {
         var rfp = CreateOpenRfp();
         var bid = rfp.SubmitBid(CarrierId.New(), SomeLanePrices());
+        rfp.Close();
         rfp.IssueAward(bid.Id);
 
+        // RFP is now Awarded — second attempt fails the Closed guard.
         var act = () => rfp.IssueAward(bid.Id);
 
-        act.ShouldThrow<DomainException>().Message.ShouldContain("already awarded");
+        act.ShouldThrow<DomainException>().Message.ShouldContain("Closed");
     }
 
     // ── Domain events ─────────────────────────────────────────────────────────

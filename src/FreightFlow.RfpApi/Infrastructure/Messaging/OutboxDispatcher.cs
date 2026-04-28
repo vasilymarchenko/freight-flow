@@ -76,7 +76,6 @@ public sealed class OutboxDispatcher : BackgroundService
                 await publishEndpoint.Publish(payload, type, ct);
 
                 message.MarkSent();
-                await db.SaveChangesAsync(ct);
 
                 _logger.LogInformation(
                     "Dispatched outbox message {MessageId} of type {MessageType}",
@@ -89,5 +88,8 @@ public sealed class OutboxDispatcher : BackgroundService
                     message.Id);
             }
         }
+
+        // Persist all MarkSent updates in a single round-trip.
+        await db.SaveChangesAsync(ct);
     }
 }

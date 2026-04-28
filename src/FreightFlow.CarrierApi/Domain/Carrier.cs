@@ -47,6 +47,19 @@ public sealed class Carrier : AggregateRoot
         return record;
     }
 
+    public void Deactivate()
+    {
+        if (AuthorityStatus == AuthorityStatus.Revoked)
+            throw new DomainException("Cannot deactivate a carrier whose authority is already revoked.");
+
+        AuthorityStatus = AuthorityStatus.Inactive;
+    }
+
+    public void Revoke()
+    {
+        AuthorityStatus = AuthorityStatus.Revoked;
+    }
+
     public void ReserveCapacity(LaneId laneId, int volume)
     {
         if (AuthorityStatus != AuthorityStatus.Active)

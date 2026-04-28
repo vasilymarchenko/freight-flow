@@ -36,7 +36,7 @@ public sealed class RfpMarkAsAwardedConsumer : IConsumer<RfpMarkAsAwarded>
         }
 
         rfp.AttachContract(ContractId.From(msg.ContractId));
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(context.CancellationToken);
 
         // Acknowledge back to the saga so it can advance from RfpAwarding → Completed.
         await context.Publish(new RfpAwardAcknowledged(

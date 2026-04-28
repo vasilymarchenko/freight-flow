@@ -96,11 +96,11 @@ public sealed class Rfp : AggregateRoot
 
     public Award IssueAward(BidId bidId)
     {
+        if (Status != RfpStatus.Closed)
+            throw new DomainException("Can only award an RFP that is in Closed status.");
+
         if (_bids.Count == 0)
             throw new DomainException("Cannot award an RFP that has no bids.");
-
-        if (Status == RfpStatus.Awarded)
-            throw new DomainException("Cannot award an RFP that is already awarded.");
 
         var bid = _bids.FirstOrDefault(b => b.Id == bidId)
             ?? throw new DomainException($"Bid '{bidId}' not found on this RFP.");

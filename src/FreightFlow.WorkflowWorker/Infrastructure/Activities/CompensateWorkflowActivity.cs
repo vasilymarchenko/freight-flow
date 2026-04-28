@@ -66,7 +66,7 @@ public sealed class CompensateWorkflowActivity : ICompensateWorkflowActivity
                 if (contract is not null)
                 {
                     contract.Void();
-                    await _db.SaveChangesAsync();
+                    await _db.SaveChangesAsync(context.CancellationToken);
                     _logger.LogInformation(
                         "Saga {CorrelationId}: voided contract {ContractId}.",
                         saga.CorrelationId, saga.ContractId);

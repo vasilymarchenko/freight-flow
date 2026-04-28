@@ -94,7 +94,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
 // ── Health checks ─────────────────────────────────────────────────────────────
 builder.Services.AddHealthChecks()
     .AddNpgSql(rfpDb,    tags: ["rfp_db"])
-    .AddRedis(redisConn, tags: ["redis"]);
+    .AddRedis(redisConn, tags: ["redis"])
+    .AddRabbitMQ(
+        rabbitConnectionString: $"amqp://{rabbitUser}:{rabbitPass}@{rabbitHost}/",
+        tags: ["rabbitmq"]);
 
 // ── OpenTelemetry ─────────────────────────────────────────────────────────────
 builder.Services.AddOpenTelemetry()

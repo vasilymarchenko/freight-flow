@@ -35,13 +35,11 @@ public sealed class CarrierAggregateTests
         var carrier = CreateActiveCarrier();
         var laneId  = LaneId.New();
         carrier.AddCapacity(laneId, 100);
+        carrier.Deactivate();
 
-        // reflect to set status — or use internal method; here we test via domain path
-        // Deactivate by creating a carrier with inactive status via a separate factory method test
-        // Since Carrier has no Deactivate() in Milestone 1, we verify the active path only
-        // and trust the guard is tested via the inactive carrier test below.
-        carrier.ReserveCapacity(laneId, 10); // should succeed for active
-        carrier.CapacityRecords[0].ReservedVolume.ShouldBe(10);
+        var act = () => carrier.ReserveCapacity(laneId, 10);
+
+        act.ShouldThrow<CarrierNotActiveException>();
     }
 
     [Fact]
@@ -114,5 +112,38 @@ public sealed class CarrierAggregateTests
         var carrier = CreateActiveCarrier();
 
         carrier.DomainEvents.ShouldContain(e => e is FreightFlow.CarrierApi.Domain.Events.CarrierOnboarded);
+    }
+
+    // ── Deactivate / Revoke ───────────────────────────────────────────────────
+
+    [Fact]
+    public void Deactivate_WhenActive_SetsInactiveStatus()
+    {
+        var carrier = CreateActiveCarrier();
+
+        carrier.Deactivate();
+
+        carrier.AuthorityStatus.ShouldBe(AuthorityStatus.Inactive);
+    }
+
+    [Fact]
+    public void Deactivate_WhenRevoked_ThrowsDomainException()
+    {
+        var carrier = CreateActiveCarrier();
+        carrier.Revoke();
+
+        var act = () => carrier.Deactivate();
+
+        act.ShouldThrow<DomainException>().Message.ShouldContain("revoked");
+    }
+
+    [Fact]
+    public void Revoke_WhenActive_SetsRevokedStatus()
+    {
+        var carrier = CreateActiveCarrier();
+
+        carrier.Revoke();
+
+        carrier.AuthorityStatus.ShouldBe(AuthorityStatus.Revoked);
     }
 }

@@ -94,7 +94,10 @@ builder.Services.AddMassTransit(x =>
 
 // ── Health checks ─────────────────────────────────────────────────────────────
 builder.Services.AddHealthChecks()
-    .AddNpgSql(rfpDb, tags: ["rfp_db"]);
+    .AddNpgSql(rfpDb, tags: ["rfp_db"])
+    .AddRabbitMQ(
+        rabbitConnectionString: $"amqp://{rabbitUser}:{rabbitPass}@{rabbitHost}/",
+        tags: ["rabbitmq"]);
 
 // ── OpenTelemetry ─────────────────────────────────────────────────────────────
 builder.Services.AddOpenTelemetry()
