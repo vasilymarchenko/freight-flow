@@ -65,11 +65,11 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__RfpDb=Host=postgres-rfp;Database=rfp_db;Username=postgres;Password=postgres
-      - ConnectionStrings__Redis=redis:6379
-      - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=guest
-      - RabbitMq__Password=guest
+      - ConnectionStrings__RfpDb=${CONN_RFP_DB}
+      - ConnectionStrings__Redis=${CONN_REDIS}
+      - RabbitMq__Host=${RABBITMQ_HOST}
+      - RabbitMq__Username=${RABBITMQ_USER}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD}
     depends_on:
       postgres-rfp:
         condition: service_healthy
@@ -93,11 +93,11 @@ services:
       - "5011:5011"   # gRPC (HTTP/2 only)
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__CarrierDb=Host=postgres-carrier;Database=carrier_db;Username=postgres;Password=postgres
-      - ConnectionStrings__Redis=redis:6379
-      - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=guest
-      - RabbitMq__Password=guest
+      - ConnectionStrings__CarrierDb=${CONN_CARRIER_DB}
+      - ConnectionStrings__Redis=${CONN_REDIS}
+      - RabbitMq__Host=${RABBITMQ_HOST}
+      - RabbitMq__Username=${RABBITMQ_USER}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD}
     depends_on:
       postgres-carrier:
         condition: service_healthy
@@ -120,12 +120,12 @@ services:
       - "5002:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__RfpDb=Host=postgres-rfp;Database=rfp_db;Username=postgres;Password=postgres
-      - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=guest
-      - RabbitMq__Password=guest
+      - ConnectionStrings__RfpDb=${CONN_RFP_DB}
+      - RabbitMq__Host=${RABBITMQ_HOST}
+      - RabbitMq__Username=${RABBITMQ_USER}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD}
       # Internal Docker Compose hostname + gRPC port (HTTP/2 only, no TLS)
-      - CarrierGrpc__Endpoint=http://freight-carrier-api:5011
+      - CarrierGrpc__Endpoint=${CARRIER_GRPC_ENDPOINT}
     depends_on:
       postgres-rfp:
         condition: service_healthy
@@ -148,6 +148,9 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
     depends_on:
       freight-rfp-api:
         condition: service_healthy

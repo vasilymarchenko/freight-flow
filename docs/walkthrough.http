@@ -1,98 +1,160 @@
 # FreightFlow — Happy-Path Walkthrough
 # VS Code REST Client — run each request with Ctrl+Alt+R
-# Full sequence implemented in Milestone 5; health checks usable from Milestone 0.
+#
+# Run in order, top to bottom. Each step depends on the previous one.
+# Response values are extracted automatically via # @name annotations —
+# no manual copy-pasting of IDs required.
 #
 # All requests go through the Gateway on port 8080.
-# For direct-service testing during development, swap 8080 for 5000/5001/5002.
+# For direct-service testing during development, swap 8080 for 5000/5001.
 
 @gateway = http://localhost:8080
 
-# ─── Milestone 0: Health checks ────────────────────────────────────────────────
-
-### RFP API health
-GET http://localhost:5000/health
-
-### Carrier API health
-GET http://localhost:5001/health
-
-### Workflow Worker health
-GET http://localhost:5002/health
+# ─── Health checks (no auth required) ──────────────────────────────────────────
 
 ### Gateway health
-GET http://localhost:8080/health
+GET {{gateway}}/health
+
+### RFP API health (direct)
+GET http://localhost:5000/health
+
+### Carrier API health (direct)
+GET http://localhost:5001/health
+
+### Workflow Worker health (direct)
+GET http://localhost:5002/health
 
 
-# ─── Milestone 5: Full happy path (fill in after Milestone 5) ──────────────────
+# ─── Step 1 — Get a JWT ────────────────────────────────────────────────────────
+# Local dev stub. In production replace with Azure AD B2C / Keycloak.
 
-### 1. Get a JWT (local dev stub — not a real auth server)
-# POST {{gateway}}/token
-# Content-Type: application/json
-#
-# {
-#   "sub": "shipper-1",
-#   "role": "shipper"
-# }
+# @name getToken
+POST {{gateway}}/token
+Content-Type: application/json
 
-### 2. Onboard a carrier
-# @token = <paste token from step 1>
-# POST {{gateway}}/carriers
-# Authorization: Bearer {{token}}
-# Content-Type: application/json
-#
-# {
-#   "dotNumber": "1234567",
-#   "name": "Acme Trucking LLC",
-#   "insuranceExpiry": "2027-12-31"
-# }
+{
+  "sub": "shipper-1",
+  "role": "shipper"
+}
 
-### 3. Create an RFP
-# POST {{gateway}}/rfps
-# Authorization: Bearer {{token}}
-# Content-Type: application/json
-#
-# {
-#   "shipperId": "00000000-0000-0000-0000-000000000001",
-#   "maxBidRounds": 3,
-#   "openAt": "2026-05-01T00:00:00Z",
-#   "closeAt": "2026-05-15T00:00:00Z"
-# }
 
-### 4. Add a lane
-# POST {{gateway}}/rfps/{{rfpId}}/lanes
-# Authorization: Bearer {{token}}
-# Content-Type: application/json
-#
-# {
-#   "originZip": "90210",
-#   "destZip": "10001",
-#   "freightClass": "Class70",
-#   "volume": 100
-# }
+# ─── Step 2 — Onboard a carrier ────────────────────────────────────────────────
 
-### 5. Open the RFP
-# POST {{gateway}}/rfps/{{rfpId}}/open
-# Authorization: Bearer {{token}}
+# @name onboardCarrier
+POST {{gateway}}/carriers
+Authorization: Bearer {{getToken.response.body.$.token}}
+Content-Type: application/json
 
-### 6. Submit a bid
-# POST {{gateway}}/rfps/{{rfpId}}/bids
-# Authorization: Bearer {{token}}
-# Idempotency-Key: bid-key-001
-# Content-Type: application/json
-#
-# {
-#   "carrierId": "{{carrierId}}",
-#   "lanePrices": [
-#     { "laneId": "{{laneId}}", "amount": 1250.00, "currency": "USD" }
-#   ]
-# }
+{
+  "dotNumber": "1234567",
+  "name": "Acme Trucking LLC",
+  "insuranceExpiry": "2027-12-31",
+  "equipmentTypes": ["DryVan"],
+  "certifications": [],
+  "notes": null
+}
 
-### 7. Award the carrier
-# POST {{gateway}}/rfps/{{rfpId}}/awards
-# Authorization: Bearer {{token}}
-# Content-Type: application/json
-#
-# { "bidId": "{{bidId}}" }
 
-### 8. Get RFP state
-# GET {{gateway}}/rfps/{{rfpId}}
-# Authorization: Bearer {{token}}
+# ─── Step 3 — Create an RFP ────────────────────────────────────────────────────
+
+# @name createRfp
+POST {{gateway}}/rfps
+Authorization: Bearer {{getToken.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "shipperId": "00000000-0000-0000-0000-000000000001",
+  "maxBidRounds": 3,
+  "openAt": "2026-05-01T00:00:00Z",
+  "closeAt": "2026-06-30T00:00:00Z"
+}
+
+
+# ─── Step 4 — Add a lane ───────────────────────────────────────────────────────
+
+# @name addLane
+POST {{gateway}}/rfps/{{createRfp.response.body.$.id}}/lanes
+Authorization: Bearer {{getToken.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "originZip": "90210",
+  "destZip": "10001",
+  "freightClass": "Class70",
+  "volume": 100
+}
+
+
+# ─── Step 5 — Open the RFP ─────────────────────────────────────────────────────
+
+### Open RFP (transitions Draft → Open; bids can now be submitted)
+POST {{gateway}}/rfps/{{createRfp.response.body.$.id}}/open
+Authorization: Bearer {{getToken.response.body.$.token}}
+
+
+# ─── Step 6 — Submit a bid ─────────────────────────────────────────────────────
+# Idempotency-Key ensures a retry of this exact request returns the same 201.
+
+# @name submitBid
+POST {{gateway}}/rfps/{{createRfp.response.body.$.id}}/bids
+Authorization: Bearer {{getToken.response.body.$.token}}
+Idempotency-Key: bid-key-001
+Content-Type: application/json
+
+{
+  "carrierId": "{{onboardCarrier.response.body.$.id}}",
+  "lanePrices": [
+    {
+      "laneId": "{{addLane.response.body.$.id}}",
+      "amount": 1250.00,
+      "currency": "USD"
+    }
+  ]
+}
+
+
+# ─── Step 6b — Idempotency check (same key → same 201) ─────────────────────────
+
+### Re-submit with same Idempotency-Key — should return the cached 201
+POST {{gateway}}/rfps/{{createRfp.response.body.$.id}}/bids
+Authorization: Bearer {{getToken.response.body.$.token}}
+Idempotency-Key: bid-key-001
+Content-Type: application/json
+
+{
+  "carrierId": "{{onboardCarrier.response.body.$.id}}",
+  "lanePrices": [
+    {
+      "laneId": "{{addLane.response.body.$.id}}",
+      "amount": 1250.00,
+      "currency": "USD"
+    }
+  ]
+}
+
+
+# ─── Step 7 — Award the carrier ────────────────────────────────────────────────
+# Returns 202 Accepted — the award workflow (Saga) continues asynchronously.
+# Watch freight-workflow-worker logs for state transitions.
+
+### Award carrier (triggers AwardWorkflow saga via Outbox → RabbitMQ)
+POST {{gateway}}/rfps/{{createRfp.response.body.$.id}}/awards
+Authorization: Bearer {{getToken.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "bidId": "{{submitBid.response.body.$.id}}"
+}
+
+
+# ─── Step 8 — Confirm final state ──────────────────────────────────────────────
+
+### Get RFP (status should be Awarded; award.contractId populated after saga completes)
+GET {{gateway}}/rfps/{{createRfp.response.body.$.id}}
+Authorization: Bearer {{getToken.response.body.$.token}}
+
+
+# ─── Rate-limit smoke test ──────────────────────────────────────────────────────
+# Uncomment and run in a loop to verify 429 responses after 1000 req/min per sub.
+# for i in {1..105}; do curl -s -o /dev/null -w "%{http_code}\n" \
+#   -H "Authorization: Bearer <token>" http://localhost:8080/rfps/<id>; done
