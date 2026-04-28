@@ -78,6 +78,7 @@ dotnet test tests/FreightFlow.Domain.Tests/
 
 | When you are... | Load this skill |
 |---|---|
+| Reviewing, validating, or auditing any changes | `freightflow-review` |
 | Writing any C# code, reviewing structure, wiring DI | `freightflow-coding-standards` |
 | Touching domain models, aggregates, events, invariants | `freightflow-domain` |
 | Writing EF Core config, migrations, Dapper, Outbox, idempotency | `freightflow-persistence` |
