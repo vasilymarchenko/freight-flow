@@ -46,9 +46,10 @@ public sealed class Bid
 
 public sealed class Award
 {
-    public BidId         BidId     { get; private set; }
-    public CarrierId     CarrierId { get; private set; }
-    public DateTimeOffset AwardedAt { get; private set; }
+    public BidId          BidId      { get; private set; }
+    public CarrierId      CarrierId  { get; private set; }
+    public ContractId?    ContractId { get; private set; }
+    public DateTimeOffset AwardedAt  { get; private set; }
 
     private Award() { }  // EF Core
 
@@ -57,5 +58,13 @@ public sealed class Award
         BidId     = bidId;
         CarrierId = carrierId;
         AwardedAt = DateTimeOffset.UtcNow;
+    }
+
+    internal void AttachContract(ContractId contractId)
+    {
+        if (ContractId is not null)
+            throw new DomainException("A contract is already attached to this award.");
+
+        ContractId = contractId;
     }
 }

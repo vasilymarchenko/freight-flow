@@ -138,6 +138,14 @@ internal sealed class RfpConfiguration : IEntityTypeConfiguration<Rfp>
                 .HasColumnName("carrier_id")
                 .HasConversion(id => id.Value, v => CarrierId.From(v));
 
+            award.Property(a => a.ContractId)
+                .HasColumnName("contract_id")
+                .HasConversion(
+                    new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<ContractId, Guid>(
+                        id => id.Value,
+                        v  => ContractId.From(v)))
+                .IsRequired(false);
+
             award.Property(a => a.AwardedAt).HasColumnName("awarded_at");
         });
 

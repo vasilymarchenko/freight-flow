@@ -1,5 +1,6 @@
 using FreightFlow.RfpApi.Domain.Events;
 using FreightFlow.SharedKernel;
+using DomainAwardIssued = FreightFlow.RfpApi.Domain.Events.AwardIssued;
 
 namespace FreightFlow.RfpApi.Domain;
 
@@ -107,7 +108,16 @@ public sealed class Rfp : AggregateRoot
         Award     = new Award(bidId, bid.CarrierId);
         Status    = RfpStatus.Awarded;
         UpdatedAt = DateTimeOffset.UtcNow;
-        Raise(new AwardIssued(Id, bidId, bid.CarrierId, DateTimeOffset.UtcNow));
+        Raise(new DomainAwardIssued(Id, bidId, bid.CarrierId, DateTimeOffset.UtcNow));
         return Award;
+    }
+
+    public void AttachContract(ContractId contractId)
+    {
+        if (Award is null)
+            throw new DomainException("Cannot attach a contract to an RFP with no award.");
+
+        Award.AttachContract(contractId);
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

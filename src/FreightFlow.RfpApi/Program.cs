@@ -57,13 +57,17 @@ builder.Services
 // ── MassTransit / RabbitMQ ────────────────────────────────────────────────────
 builder.Services.AddMassTransit(x =>
 {
-    x.UsingRabbitMq((_, cfg) =>
+    x.AddConsumer<RfpMarkAsAwardedConsumer>();
+
+    x.UsingRabbitMq((ctx, cfg) =>
     {
         cfg.Host(rabbitHost, "/", h =>
         {
             h.Username(rabbitUser);
             h.Password(rabbitPass);
         });
+
+        cfg.ConfigureEndpoints(ctx);
     });
 });
 

@@ -11,9 +11,38 @@
     <ProjectReference Include="../FreightFlow.SharedKernel/FreightFlow.SharedKernel.csproj" />
   </ItemGroup>
 
+  <!-- gRPC client code generation (WorkflowWorker is the CLIENT side) -->
   <ItemGroup>
+    <Protobuf Include="..\..\proto\capacity.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Logging -->
     <PackageReference Include="Serilog.AspNetCore" Version="8.*" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="3.*" />
+
+    <!-- Persistence -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.*" />
+
+    <!-- Migrations -->
+    <PackageReference Include="FluentMigrator.Runner" Version="5.*" />
+    <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.*" />
+
+    <!-- Messaging — saga requires EntityFrameworkCore repo -->
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.*" />
+    <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.*" />
+
+    <!-- gRPC client -->
+    <PackageReference Include="Grpc.AspNetCore" Version="2.*" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.*" />
+
+    <!-- Resilience (Polly v8 pipeline: retry → circuit breaker → timeout) -->
+    <PackageReference Include="Polly" Version="8.*" />
+
+    <!-- Health checks -->
+    <PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="8.*" />
+
+    <!-- Observability -->
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.*" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.*" />
   </ItemGroup>
