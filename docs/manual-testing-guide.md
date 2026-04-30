@@ -251,19 +251,18 @@ Expected `200 OK` — one row per `(bid, lane)`, lowest amount first:
 
 **Business action:** Bidding period ends; RFP transitions `Open → Closed` before awarding.
 
-> **Note:** There is no REST endpoint for this transition at present. Use one of these two options:
-
-**Option A — Direct DB update (development only):**
-
-```bash
-docker exec -it postgres-rfp psql -U postgres -d rfp_db -c \
-  "UPDATE rfps SET status = 'Closed' WHERE id = '{{RFP_ID}}';"
+```http
+POST http://localhost:8080/rfps/{{RFP_ID}}/close
+Authorization: Bearer {{TOKEN}}
 ```
 
-**Option B — Set `closeAt` in the past when creating the RFP** (if a background job exists to auto-close):  
-Not implemented in Stage 1 — use Option A.
+| Expected | Detail |
+|---|---|
+| `200 OK` | empty body |
+| Background event | `RfpClosed` published via Outbox |
+| RFP status | `Closed` |
 
-Verify the status change:
+Verify:
 
 ```http
 GET http://localhost:8080/rfps/{{RFP_ID}}

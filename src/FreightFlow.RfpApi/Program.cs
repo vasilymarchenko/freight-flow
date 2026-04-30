@@ -5,6 +5,7 @@ using FreightFlow.RfpApi.Features.AddLane;
 using FreightFlow.RfpApi.Features.AwardCarrier;
 using FreightFlow.RfpApi.Features.CreateRfp;
 using FreightFlow.RfpApi.Features.GetRfp;
+using FreightFlow.RfpApi.Features.CloseRfp;
 using FreightFlow.RfpApi.Features.OpenRfp;
 using FreightFlow.RfpApi.Features.SubmitBid;
 using FreightFlow.RfpApi.Infrastructure.Messaging;
@@ -82,6 +83,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddTransient<CreateRfpHandler>();
 builder.Services.AddTransient<AddLaneHandler>();
 builder.Services.AddTransient<OpenRfpHandler>();
+builder.Services.AddTransient<CloseRfpHandler>();
 builder.Services.AddTransient<SubmitBidHandler>();
 builder.Services.AddTransient<AwardCarrierHandler>();
 builder.Services.AddTransient<GetRfpHandler>();
@@ -156,6 +158,16 @@ app.MapPost("/rfps/{rfpId:guid}/lanes", async (
 app.MapPost("/rfps/{rfpId:guid}/open", async (
     Guid              rfpId,
     OpenRfpHandler    handler,
+    CancellationToken ct) =>
+{
+    await handler.HandleAsync(rfpId, ct);
+    return Results.Ok();
+});
+
+// POST /rfps/{rfpId}/close → 200 OK
+app.MapPost("/rfps/{rfpId:guid}/close", async (
+    Guid              rfpId,
+    CloseRfpHandler   handler,
     CancellationToken ct) =>
 {
     await handler.HandleAsync(rfpId, ct);

@@ -133,7 +133,15 @@ Content-Type: application/json
 }
 
 
-# ─── Step 7 — Award the carrier ────────────────────────────────────────────────
+# ─── Step 7 — Close the RFP ────────────────────────────────────────────────────
+# Transitions Open → Closed; bidding period ends. Award can only be issued after this.
+
+### Close RFP (transitions Open → Closed)
+POST {{gateway}}/rfps/{{createRfp.response.body.$.id}}/close
+Authorization: Bearer {{getToken.response.body.$.token}}
+
+
+# ─── Step 8 — Award the carrier ────────────────────────────────────────────────
 # Returns 202 Accepted — the award workflow (Saga) continues asynchronously.
 # Watch freight-workflow-worker logs for state transitions.
 

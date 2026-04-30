@@ -152,4 +152,36 @@ public sealed class RfpAggregateTests
 
         rfp.DomainEvents.ShouldContain(e => e is FreightFlow.RfpApi.Domain.Events.RfpOpened);
     }
+
+    // ── Close ─────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Close_WhenOpen_SetsStatusToClosed()
+    {
+        var rfp = CreateOpenRfp();
+
+        rfp.Close();
+
+        rfp.Status.ShouldBe(RfpStatus.Closed);
+    }
+
+    [Fact]
+    public void Close_WhenNotOpen_ThrowsDomainException()
+    {
+        var rfp = CreateDraftRfp();
+
+        var act = () => rfp.Close();
+
+        act.ShouldThrow<DomainException>().Message.ShouldContain("Open");
+    }
+
+    [Fact]
+    public void Close_WhenOpen_RaisesRfpClosedEvent()
+    {
+        var rfp = CreateOpenRfp();
+
+        rfp.Close();
+
+        rfp.DomainEvents.ShouldContain(e => e is FreightFlow.RfpApi.Domain.Events.RfpClosed);
+    }
 }
